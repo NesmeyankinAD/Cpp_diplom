@@ -25,7 +25,7 @@ int main_1()
 #include "DatabaseFactory.h"
 #include "IDatabase.h"
 
-int main() 
+int main_2() 
 {
     try 
     {
@@ -54,6 +54,49 @@ int main()
         std::cout << "DB response:\n" << resp << std::endl;
 
         // По завершении можно вызвать другие операции (индексация и т.д.)
+        db->disconnect();
+    }
+    catch (const std::exception& ex) 
+    {
+        std::cerr << "Error: " << ex.what() << std::endl;
+        return 1;
+    }
+
+    return 0;
+}
+
+
+
+#include <iostream>
+#include <memory>
+#include "ConfigManager.h"
+#include "DatabaseFactory.h"
+#include "IDatabase.h"
+#include "Spider.h"
+
+int main() 
+{
+    try {
+        const std::string iniPath = "config.ini";
+
+        // Конфигурация и база
+        ConfigManager cm(iniPath);
+        std::unique_ptr<IDatabase> db = DatabaseFactory::create(cm);
+
+        if (!db) {
+            std::cerr << "Failed to create database instance." << std::endl;
+            return 1;
+        }
+
+        if (!db->connect("")) {
+            std::cerr << "Database connection failed." << std::endl;
+            return 1;
+        }
+
+        // Создаем паука и запускаем crawl
+        Spider spider(cm, db.get());
+        spider.start(); // однопоточный старт
+
         db->disconnect();
     }
     catch (const std::exception& ex) 

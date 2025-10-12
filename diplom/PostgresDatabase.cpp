@@ -89,7 +89,7 @@ std::string PostgresDatabase::query(const std::string& sql)
     }
 }
 
-// Новый метод: инициализация схемы
+
 bool PostgresDatabase::createTables()
 {
     if (!isConnected()) return false;
