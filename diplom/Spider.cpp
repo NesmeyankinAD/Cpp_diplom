@@ -26,6 +26,9 @@ void Spider::start() {
         }
     }
 
+    // Новая часть: очистка БД перед стартом текущего запуска
+    resetDatabaseForCurrentRun();
+
     // Простая BFS-очередь: пара URL и текущая глубина
     std::vector<std::pair<std::string, int>> queue;
     std::unordered_set<std::string> visited;
@@ -202,4 +205,12 @@ bool Spider::isSameDomain(const std::string& url) const {
     std::string domain0 = extractDomain(startPage_);
     std::string domain1 = extractDomain(url);
     return domain0 == domain1;
+}
+
+void Spider::resetDatabaseForCurrentRun() {
+    // Очищаем данные для текущего запуска
+    // Таблицы: document_words, documents, words
+    // CASCADE может понадобиться, если есть внешние зависимости
+    std::string sql = "TRUNCATE TABLE document_words, documents, words RESTART IDENTITY CASCADE;";
+    db_->query(sql);
 }

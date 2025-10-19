@@ -37,4 +37,7 @@ private:
     // простая фильтрация ссылок на основе домена
     std::string extractDomain(const std::string& url) const;
     bool isSameDomain(const std::string& url) const;
+
+    // Новое: очистка БД для текущего запуска
+    void resetDatabaseForCurrentRun();
 };
