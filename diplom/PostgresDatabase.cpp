@@ -1,5 +1,6 @@
 #include "PostgresDatabase.h"
 #include <sstream>
+#include <iostream>
 #include <pqxx/pqxx>
 
 PostgresDatabase::PostgresDatabase(const std::string& host,
@@ -60,7 +61,7 @@ bool PostgresDatabase::isConnected() const
 
 std::string PostgresDatabase::query(const std::string& sql)
 {
-    if (!isConnected()) return "ERROR: not connected";
+    if (!isConnected()) return "";
 
     try
     {
@@ -68,6 +69,9 @@ std::string PostgresDatabase::query(const std::string& sql)
         pqxx::result res = txn.exec(sql);
 
         txn.commit();
+
+        // Если результатов нет, вернуть пустую строку
+        if (res.empty()) return "";
 
         std::ostringstream out;
 
@@ -85,7 +89,9 @@ std::string PostgresDatabase::query(const std::string& sql)
     }
     catch (const std::exception& e)
     {
-        return std::string("ERROR: ") + e.what();
+        // Опционально можно вывести лог ошибки
+        std::cerr << "DB query failed: " << e.what() << std::endl;
+        return "";
     }
 }
 

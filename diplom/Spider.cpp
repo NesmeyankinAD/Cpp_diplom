@@ -1,12 +1,14 @@
 #include "Spider.h"
 
+#include <iostream>
 #include <sstream>
 #include <regex>
 #include <unordered_set>
 #include <unordered_map>
 #include <cctype>
+#include <chrono>
 
-#include "HttpClient.h" // обёртка над HTTP-клиентом (Boost.Beast)
+#include "HttpClient.h" // обёртка над HTTP-клиентом (Boost.Beast или другая реализация)
 
 Spider::Spider(const ConfigManager& cm, IDatabase* db)
     : cm_(cm), db_(db),
@@ -18,48 +20,47 @@ Spider::Spider(const ConfigManager& cm, IDatabase* db)
 void Spider::start() {
     if (!db_) return;
 
-    // Подключение к БД (если требуется)
+    // Подключение к БД (при необходимости)
     if (!db_->isConnected()) {
         if (!db_->connect("")) {
             // Не удалось подключиться
+            std::cerr << "DB connect failed." << std::endl;
             return;
         }
     }
 
-    // Новая часть: очистка БД перед стартом текущего запуска
+    // Очистить БД для текущего прогона
     resetDatabaseForCurrentRun();
 
-    // Простая BFS-очередь: пара URL и текущая глубина
-    std::vector<std::pair<std::string, int>> queue;
-    std::unordered_set<std::string> visited;
+    // Начальная задача
+    {
+        std::lock_guard<std::mutex> lock(frontier_mutex_);
+        frontier_.push({ startPage_, 0 });
+    }
+    visited_.insert(startPage_);
 
-    queue.push_back({ startPage_, 0 });
-    visited.insert(startPage_);
+    stop_ = false;
+    activeTasks_ = 0;
 
-    for (size_t i = 0; i < queue.size(); ++i) {
-        const auto& [url, depth] = queue[i];
-        std::string content;
-        std::vector<std::string> links;
-        if (!fetchPage(url, content, links)) {
-            continue;
+    // Запуск 4 рабочих потоков
+    for (size_t i = 0; i < kNumWorkers; ++i) {
+        workers_[i] = std::thread(&Spider::workerLoop, this);
+    }
+
+    // Ожидание завершения прогона
+    while (true) {
+        {
+            std::lock_guard<std::mutex> lock(frontier_mutex_);
+            if (frontier_.empty() && activeTasks_ == 0) break;
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
 
-        // Индексация содержания
-        auto wordFreq = indexWords(stripHtml(content));
-        int docId = upsertDocumentId(url);
-        if (docId > 0) {
-            storeDocumentWords(docId, wordFreq);
-        }
-
-        // Добавляем ссылки в очередь, ограничивая глубину
-        if (depth < maxDepth_) {
-            for (auto& link : links) {
-                if (!visited.count(link) && isSameDomain(link)) {
-                    visited.insert(link);
-                    queue.push_back({ link, depth + 1 });
-                }
-            }
-        }
+    // Остановка и ожидание завершения потоков
+    stop_ = true;
+    frontier_cv_.notify_all();
+    for (auto& th : workers_) {
+        if (th.joinable()) th.join();
     }
 }
 
@@ -67,14 +68,13 @@ bool Spider::fetchPage(const std::string& url, std::string& content, std::vector
     content.clear();
     links.clear();
 
-    // Используем простой HTTP GET через обёртку
+    // HTTP GET
     if (!HttpClient::fetch(url, content)) {
         return false;
     }
 
-    // Извлечение ссылок (блок простого парсинга)
-    // Без использования raw-строк, избегаем ошибок компиляции
-    std::regex aHref("<a\\s+(?:[^>]*?\\s+)?href=\\\"([^\\\"]+)\\\"", std::regex_constants::icase);
+    // Простой парсинг ссылок (<a href="...">)
+    std::regex aHref(R"(<a\s+(?:[^>]*?\s+)?href=\"([^\"]+)\")", std::regex_constants::icase);
     for (std::sregex_iterator it(content.begin(), content.end(), aHref);
         it != std::sregex_iterator();
         ++it)
@@ -85,13 +85,11 @@ bool Spider::fetchPage(const std::string& url, std::string& content, std::vector
                 links.push_back(href);
             }
             else {
-                // простая адаптация относительных ссылок
                 std::string domain = extractDomain(startPage_);
                 if (!href.empty() && href[0] == '/') {
                     links.push_back(domain + href);
                 }
                 else {
-                    // относительный путь: домен + "/" + href
                     links.push_back(domain + "/" + href);
                 }
             }
@@ -102,7 +100,6 @@ bool Spider::fetchPage(const std::string& url, std::string& content, std::vector
 }
 
 std::string Spider::stripHtml(const std::string& html) {
-    // Простое удаление тегов
     std::string text;
     bool inTag = false;
     for (char ch : html) {
@@ -110,7 +107,6 @@ std::string Spider::stripHtml(const std::string& html) {
         if (ch == '>') { inTag = false; continue; }
         if (!inTag) text += ch;
     }
-    // Замена символов переноса на пробелы
     for (char& c : text) {
         if (c == '\n' || c == '\r' || c == '\t') c = ' ';
     }
@@ -122,7 +118,7 @@ std::unordered_map<std::string, int> Spider::indexWords(const std::string& text)
     std::stringstream ss(text);
     std::string word;
     while (ss >> word) {
-        // Очистка неалфавитных символов на краях и приведение к нижнему регистру
+        // Очистка по краям и нижний регистр
         size_t l = 0;
         size_t r = word.size();
         while (l < r && !std::isalnum(static_cast<unsigned char>(word[l]))) ++l;
@@ -138,10 +134,10 @@ std::unordered_map<std::string, int> Spider::indexWords(const std::string& text)
 }
 
 int Spider::upsertDocumentId(const std::string& url) {
-    // Вставка/обновление документа и возврат id
     std::string sql = "INSERT INTO documents (url) VALUES ('" + sqlEscape(url) + "') "
         "ON CONFLICT (url) DO UPDATE SET url = EXCLUDED.url "
         "RETURNING id;";
+    std::lock_guard<std::mutex> lock(dbMutex_);
     std::string res = db_->query(sql);
     if (res.empty()) return -1;
     std::stringstream ss(res);
@@ -150,7 +146,14 @@ int Spider::upsertDocumentId(const std::string& url) {
     return -1;
 }
 
+// Обёртка, которая блокирует доступ к БД
 int Spider::upsertWordId(const std::string& word) {
+    std::lock_guard<std::mutex> lock(dbMutex_);
+    return upsertWordIdNoLock(word);
+}
+
+// Версия без блокировки (вызывается только внутри области, где уже захвачен dbMutex_)
+int Spider::upsertWordIdNoLock(const std::string& word) {
     std::string sql = "INSERT INTO words (word) VALUES ('" + sqlEscape(word) + "') "
         "ON CONFLICT (word) DO UPDATE SET word = EXCLUDED.word "
         "RETURNING id;";
@@ -163,12 +166,14 @@ int Spider::upsertWordId(const std::string& word) {
 }
 
 void Spider::storeDocumentWords(int docId, const std::unordered_map<std::string, int>& freqs) {
-    for (const auto& [word, freq] : freqs) {
-        int wordId = upsertWordId(word);
+    // Однократная блокировка на весь цикл записи
+    std::lock_guard<std::mutex> lock(dbMutex_);
+    for (const auto& kv : freqs) {
+        int wordId = upsertWordIdNoLock(kv.first);
         if (wordId <= 0) continue;
         std::stringstream sql;
         sql << "INSERT INTO document_words (document_id, word_id, frequency) "
-            << "VALUES (" << docId << ", " << wordId << ", " << freq << ") "
+            << "VALUES (" << docId << ", " << wordId << ", " << kv.second << ") "
             << "ON CONFLICT (document_id, word_id) "
             << "DO UPDATE SET frequency = document_words.frequency + EXCLUDED.frequency;";
         db_->query(sql.str());
@@ -185,8 +190,15 @@ std::string Spider::sqlEscape(const std::string& s) {
     return out;
 }
 
+void Spider::resetDatabaseForCurrentRun() {
+    // Очистка данных текущего прогона
+    std::string sql = "TRUNCATE TABLE document_words, documents, words RESTART IDENTITY CASCADE;";
+    std::lock_guard<std::mutex> lock(dbMutex_);
+    db_->query(sql);
+}
+
 std::string Spider::extractDomain(const std::string& url) const {
-    // Простая реализация: возвращает протокол + домен (и опционально порт)
+    // Простая реализация: протокол + домен
     std::string tmp = url;
     const std::string http = "http://";
     const std::string https = "https://";
@@ -207,10 +219,81 @@ bool Spider::isSameDomain(const std::string& url) const {
     return domain0 == domain1;
 }
 
-void Spider::resetDatabaseForCurrentRun() {
-    // Очищаем данные для текущего запуска
-    // Таблицы: document_words, documents, words
-    // CASCADE может понадобиться, если есть внешние зависимости
-    std::string sql = "TRUNCATE TABLE document_words, documents, words RESTART IDENTITY CASCADE;";
-    db_->query(sql);
+// Новые приватные методы реализации безопасной записи под одной блокировкой
+int Spider::upsertDocumentIdNoLock(const std::string& url) {
+    std::string sql = "INSERT INTO documents (url) VALUES ('" + sqlEscape(url) + "') "
+        "ON CONFLICT (url) DO UPDATE SET url = EXCLUDED.url "
+        "RETURNING id;";
+    std::string res = db_->query(sql);
+    if (res.empty()) return -1;
+    std::stringstream ss(res);
+    int id;
+    if (ss >> id) return id;
+    return -1;
+}
+
+void Spider::storeDocumentWordsNoLock(int docId, const std::unordered_map<std::string, int>& freqs) {
+    for (const auto& kv : freqs) {
+        int wordId = upsertWordIdNoLock(kv.first);
+        if (wordId <= 0) continue;
+        std::stringstream sql;
+        sql << "INSERT INTO document_words (document_id, word_id, frequency) "
+            << "VALUES (" << docId << ", " << wordId << ", " << kv.second << ") "
+            << "ON CONFLICT (document_id, word_id) "
+            << "DO UPDATE SET frequency = document_words.frequency + EXCLUDED.frequency;";
+        db_->query(sql.str());
+    }
+}
+
+void Spider::workerLoop() {
+    while (true) {
+        Task task;
+        {
+            std::unique_lock<std::mutex> lk(frontier_mutex_);
+            frontier_cv_.wait(lk, [this] { return stop_ || !frontier_.empty(); });
+            if (stop_) break;
+            task = frontier_.front();
+            frontier_.pop();
+            ++activeTasks_;
+        }
+
+        // Предварительная обработка: загрузка страницы и индексация слов
+        bool ok = false;
+        std::string content;
+        std::vector<std::string> links;
+        ok = fetchPage(task.url, content, links);
+        if (ok) {
+            std::string text = stripHtml(content);
+            auto freqs = indexWords(text);
+
+            int docId = -1;
+            {
+                // Единая блокировка на запись в БД
+                std::lock_guard<std::mutex> lock(dbMutex_);
+                docId = upsertDocumentIdNoLock(task.url);
+                if (docId > 0) {
+                    storeDocumentWordsNoLock(docId, freqs);
+                }
+            }
+
+            if (docId > 0 && task.depth + 1 <= maxDepth_) {
+                for (const auto& link : links) {
+                    if (!isSameDomain(link)) continue;
+                    bool seen = false;
+                    {
+                        std::lock_guard<std::mutex> vlk(visited_mutex_);
+                        if (visited_.count(link)) seen = true;
+                    }
+                    if (seen) continue;
+                    {
+                        std::lock_guard<std::mutex> fll(frontier_mutex_);
+                        frontier_.push({ link, task.depth + 1 });
+                    }
+                }
+            }
+        }
+
+        --activeTasks_;
+        frontier_cv_.notify_all();
+    }
 }
