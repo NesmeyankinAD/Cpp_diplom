@@ -33,6 +33,9 @@
     <ClCompile Include="HttpClient.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="HttpLogger.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ConfigManager.h">
@@ -51,6 +54,9 @@
       <Filter>Исходные файлы</Filter>
     </ClInclude>
     <ClInclude Include="HttpClient.h">
+      <Filter>Исходные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpLogger.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
   </ItemGroup>

@@ -130,6 +130,7 @@
     <ClCompile Include="ConfigManager.cpp" />
     <ClCompile Include="DatabaseFactory.cpp" />
     <ClCompile Include="HttpClient.cpp" />
+    <ClCompile Include="HttpLogger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PostgresDatabase.cpp" />
     <ClCompile Include="Spider.cpp" />
@@ -138,6 +139,7 @@
     <ClInclude Include="ConfigManager.h" />
     <ClInclude Include="DatabaseFactory.h" />
     <ClInclude Include="HttpClient.h" />
+    <ClInclude Include="HttpLogger.h" />
     <ClInclude Include="IDatabase.h" />
     <ClInclude Include="PostgresDatabase.h" />
     <ClInclude Include="Spider.h" />

@@ -5,32 +5,42 @@
 #include <regex>
 #include <unordered_set>
 #include <unordered_map>
-#include <cctype>
 #include <chrono>
+#include <thread>
+#include <cctype>
 
-#include "HttpClient.h" // обёртка над HTTP-клиентом (Boost.Beast или другая реализация)
+#include "HttpClient.h"   // Используем для загрузки страниц (HTTP/HTTPS)
+#include "HttpLogger.h"   // Логирование
 
+// Конструктор
 Spider::Spider(const ConfigManager& cm, IDatabase* db)
-    : cm_(cm), db_(db),
+    : cm_(cm),
+    db_(db),
     startPage_(cm.getStartPage()),
-    maxDepth_(cm.getRecursionDepth())
+    maxDepth_(cm.getRecursionDepth()),
+    crawlDelayMs_(cm.getCrawlDelayMs())
 {
 }
 
+// Запуск паука
 void Spider::start() {
-    if (!db_) return;
+    if (!db_) {
+        HttpLogger::log("Spider", "DB pointer is null. Aborting.");
+        return;
+    }
 
-    // Подключение к БД (при необходимости)
+    // Подключение к БД
     if (!db_->isConnected()) {
         if (!db_->connect("")) {
-            // Не удалось подключиться
-            std::cerr << "DB connect failed." << std::endl;
+            HttpLogger::log("Spider", "DB connect failed.");
             return;
         }
     }
+    HttpLogger::log("Spider", "DB connected.");
 
-    // Очистить БД для текущего прогона
+    // Очистка БД перед прогоном
     resetDatabaseForCurrentRun();
+    HttpLogger::log("Spider", "Database reset for current run.");
 
     // Начальная задача
     {
@@ -42,7 +52,7 @@ void Spider::start() {
     stop_ = false;
     activeTasks_ = 0;
 
-    // Запуск 4 рабочих потоков
+    // Запуск рабочих потоков
     for (size_t i = 0; i < kNumWorkers; ++i) {
         workers_[i] = std::thread(&Spider::workerLoop, this);
     }
@@ -53,31 +63,35 @@ void Spider::start() {
             std::lock_guard<std::mutex> lock(frontier_mutex_);
             if (frontier_.empty() && activeTasks_ == 0) break;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    // Остановка и ожидание завершения потоков
+    // Остановка и ожидание потоков
     stop_ = true;
     frontier_cv_.notify_all();
     for (auto& th : workers_) {
         if (th.joinable()) th.join();
     }
+
+    HttpLogger::log("Spider", "Crawl finished.");
 }
 
 bool Spider::fetchPage(const std::string& url, std::string& content, std::vector<std::string>& links) {
     content.clear();
     links.clear();
 
-    // HTTP GET
     if (!HttpClient::fetch(url, content)) {
+        HttpLogger::log("Spider", "FETCH FAILED: " + url);
         return false;
     }
 
-    // Простой парсинг ссылок (<a href="...">)
+    HttpLogger::log("Spider", "Fetched page: " + url + " (size=" + std::to_string(content.size()) + ")");
+
+    // Простейший парсинг ссылок
     std::regex aHref(R"(<a\s+(?:[^>]*?\s+)?href=\"([^\"]+)\")", std::regex_constants::icase);
-    for (std::sregex_iterator it(content.begin(), content.end(), aHref);
-        it != std::sregex_iterator();
-        ++it)
+        for (std::sregex_iterator it(content.begin(), content.end(), aHref);
+            it != std::sregex_iterator();
+            ++it)
     {
         std::string href = (*it)[1].str();
         if (!href.empty()) {
@@ -96,6 +110,7 @@ bool Spider::fetchPage(const std::string& url, std::string& content, std::vector
         }
     }
 
+    HttpLogger::log("Spider", "Links found on " + url + ": " + std::to_string(links.size()));
     return !content.empty();
 }
 
@@ -107,6 +122,7 @@ std::string Spider::stripHtml(const std::string& html) {
         if (ch == '>') { inTag = false; continue; }
         if (!inTag) text += ch;
     }
+    // Небольшая нормализация
     for (char& c : text) {
         if (c == '\n' || c == '\r' || c == '\t') c = ' ';
     }
@@ -118,7 +134,7 @@ std::unordered_map<std::string, int> Spider::indexWords(const std::string& text)
     std::stringstream ss(text);
     std::string word;
     while (ss >> word) {
-        // Очистка по краям и нижний регистр
+        // Очистка по краям и нормализация
         size_t l = 0;
         size_t r = word.size();
         while (l < r && !std::isalnum(static_cast<unsigned char>(word[l]))) ++l;
@@ -146,13 +162,11 @@ int Spider::upsertDocumentId(const std::string& url) {
     return -1;
 }
 
-// Обёртка, которая блокирует доступ к БД
 int Spider::upsertWordId(const std::string& word) {
     std::lock_guard<std::mutex> lock(dbMutex_);
     return upsertWordIdNoLock(word);
 }
 
-// Версия без блокировки (вызывается только внутри области, где уже захвачен dbMutex_)
 int Spider::upsertWordIdNoLock(const std::string& word) {
     std::string sql = "INSERT INTO words (word) VALUES ('" + sqlEscape(word) + "') "
         "ON CONFLICT (word) DO UPDATE SET word = EXCLUDED.word "
@@ -166,7 +180,7 @@ int Spider::upsertWordIdNoLock(const std::string& word) {
 }
 
 void Spider::storeDocumentWords(int docId, const std::unordered_map<std::string, int>& freqs) {
-    // Однократная блокировка на весь цикл записи
+    // Блокируем запись на протяжении всей обработки одного документа
     std::lock_guard<std::mutex> lock(dbMutex_);
     for (const auto& kv : freqs) {
         int wordId = upsertWordIdNoLock(kv.first);
@@ -191,7 +205,7 @@ std::string Spider::sqlEscape(const std::string& s) {
 }
 
 void Spider::resetDatabaseForCurrentRun() {
-    // Очистка данных текущего прогона
+    // Очисткас текущих данных
     std::string sql = "TRUNCATE TABLE document_words, documents, words RESTART IDENTITY CASCADE;";
     std::lock_guard<std::mutex> lock(dbMutex_);
     db_->query(sql);
@@ -219,7 +233,6 @@ bool Spider::isSameDomain(const std::string& url) const {
     return domain0 == domain1;
 }
 
-// Новые приватные методы реализации безопасной записи под одной блокировкой
 int Spider::upsertDocumentIdNoLock(const std::string& url) {
     std::string sql = "INSERT INTO documents (url) VALUES ('" + sqlEscape(url) + "') "
         "ON CONFLICT (url) DO UPDATE SET url = EXCLUDED.url "
@@ -257,7 +270,8 @@ void Spider::workerLoop() {
             ++activeTasks_;
         }
 
-        // Предварительная обработка: загрузка страницы и индексация слов
+        HttpLogger::log("Spider", "Processing: " + task.url + " depth=" + std::to_string(task.depth));
+
         bool ok = false;
         std::string content;
         std::vector<std::string> links;
@@ -268,10 +282,10 @@ void Spider::workerLoop() {
 
             int docId = -1;
             {
-                // Единая блокировка на запись в БД
                 std::lock_guard<std::mutex> lock(dbMutex_);
                 docId = upsertDocumentIdNoLock(task.url);
                 if (docId > 0) {
+                    // Записываем словарь документов для данного документа
                     storeDocumentWordsNoLock(docId, freqs);
                 }
             }
@@ -291,6 +305,14 @@ void Spider::workerLoop() {
                     }
                 }
             }
+        }
+        else {
+            HttpLogger::log("Spider", "FAILED to fetch: " + task.url);
+        }
+
+        if (crawlDelayMs_ > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(crawlDelayMs_));
+            HttpLogger::log("Spider", "Sleeping for " + std::to_string(crawlDelayMs_) + " ms");
         }
 
         --activeTasks_;

@@ -3,7 +3,7 @@
 
 #include <string>
 
-class ConfigManager 
+class ConfigManager
 {
 private:
     // Внутреннее хранение настроек
@@ -17,6 +17,7 @@ private:
         std::string startPage;
         int recursionDepth;
         int serverPort;
+        int crawlDelayMs; // новая задержка между запросами (мс)
     } data_;
 
 public:
@@ -31,7 +32,7 @@ public:
     std::string getStartPage() const;
     int getRecursionDepth() const;
     int getServerPort() const;
-
+    int getCrawlDelayMs() const; // новая
 private:
     // Валидация конфигурации
     void validate() const;
