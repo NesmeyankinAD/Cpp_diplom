@@ -30,6 +30,12 @@
     <ClInclude Include="SearchResult.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
+    <ClInclude Include="HttpServerBeast.h">
+      <Filter>Исходные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="HtmlRenderer.h">
+      <Filter>Исходные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SearcherPostgresDatabase.cpp">
@@ -45,6 +51,12 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="SearchResult.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpServerBeast.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

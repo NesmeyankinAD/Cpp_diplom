@@ -45,7 +45,7 @@ int main_1()
 
 #include <iostream>
 
-int main() {
+int main_2() {
     // 1) читаем конфигурацию
     SearcherConfigManager cfg("searcher.ini");
 
@@ -77,6 +77,55 @@ int main() {
     for (const auto& r : results) {
         std::cout << r.url << " -> " << r.score << std::endl;
     }
+
+    return 0;
+}
+
+#include "SearcherConfigManager.h"
+#include "SearcherPostgresDatabase.h"
+#include "SearcherEngine.h"
+#include "SearchResult.h"
+#include "HtmlRenderer.h"
+#include "HttpServerBeast.h"
+
+#include <boost/asio.hpp>
+#include <iostream>
+
+int main() {
+    // 1) читаем конфигурацию
+    SearcherConfigManager cfg("searcher.ini");
+
+    // 2) формируем строку подключения к БД
+    std::string conn =
+        "host=" + cfg.getDBHost() +
+        " port=" + std::to_string(cfg.getDBPort()) +
+        " dbname=" + cfg.getDBName() +
+        " user=" + cfg.getDBUser() +
+        " password=" + cfg.getDBPassword();
+
+    // 3) БД и движок
+    SearcherPostgresDatabase db(cfg.getDBHost(),
+        cfg.getDBPort(),
+        cfg.getDBName(),
+        cfg.getDBUser(),
+        cfg.getDBPassword());
+
+    if (!db.connect(conn)) {
+        std::cerr << "DB connect failed." << std::endl;
+        return 1;
+    }
+
+    HtmlRenderer htmlRenderer;
+    SearcherEngine engine(&db);
+
+    // 4) HTTP сервер на Boost.Beast
+    boost::asio::io_context ioc;
+    unsigned short httpPort = static_cast<unsigned short>(cfg.getServerPort()); // например 8080
+
+    HttpServerBeast server(ioc, httpPort, &engine, &htmlRenderer);
+
+    // 5) запуск сервера (блокирующий)
+    server.run();
 
     return 0;
 }
