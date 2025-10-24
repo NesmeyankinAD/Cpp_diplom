@@ -3,16 +3,19 @@
 #include <iostream>
 #include <pqxx/pqxx>
 
-SearcherPostgresDatabase::SearcherPostgresDatabase(
-    const std::string& host,
-    int port,
-    const std::string& dbname,
-    const std::string& user,
-    const std::string& password)
-    : host_(host), port_(port), dbname_(dbname), user_(user), password_(password),
-    conn_(nullptr), connected_(false)
-{
-}
+SearcherPostgresDatabase::SearcherPostgresDatabase(const std::string& host,
+                                                   int port,
+                                                   const std::string& dbname,
+                                                   const std::string& user,
+                                                   const std::string& password)
+    : host_(host), 
+    port_(port), 
+    dbname_(dbname), 
+    user_(user), 
+    password_(password),
+    conn_(nullptr), 
+    connected_(false)
+    {}
 
 bool SearcherPostgresDatabase::connect(const std::string& connectionString)
 {
@@ -86,7 +89,6 @@ std::string SearcherPostgresDatabase::query(const std::string& sql)
     }
     catch (const std::exception& e)
     {
-        // Опционально можно вывести лог ошибки
         std::cerr << "DB query failed: " << e.what() << std::endl;
         return "";
     }

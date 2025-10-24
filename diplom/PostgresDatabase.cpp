@@ -4,13 +4,18 @@
 #include <pqxx/pqxx>
 
 PostgresDatabase::PostgresDatabase(const std::string& host,
-    int port,
-    const std::string& dbname,
-    const std::string& user,
-    const std::string& password)
-    : host_(host), port_(port), dbname_(dbname), user_(user), password_(password),
-    conn_(nullptr), connected_(false), schemaInitialized_(false) {
-}
+                                   int port,
+                                   const std::string& dbname,
+                                   const std::string& user,
+                                   const std::string& password)
+    : host_(host), 
+    port_(port), 
+    dbname_(dbname), 
+    user_(user), 
+    password_(password),
+    conn_(nullptr), 
+    connected_(false), 
+    schemaInitialized_(false) {}
 
 bool PostgresDatabase::connect(const std::string& connectionString)
 {
@@ -35,7 +40,8 @@ bool PostgresDatabase::connect(const std::string& connectionString)
 
         connected_ = conn_ && conn_->is_open();
 
-        if (connected_ && !schemaInitialized_) {
+        if (connected_ && !schemaInitialized_) 
+        {
             // инициализируем схему БД при первом подключении
             schemaInitialized_ = createTables();
         }
@@ -89,7 +95,6 @@ std::string PostgresDatabase::query(const std::string& sql)
     }
     catch (const std::exception& e)
     {
-        // Опционально можно вывести лог ошибки
         std::cerr << "DB query failed: " << e.what() << std::endl;
         return "";
     }
@@ -103,6 +108,7 @@ bool PostgresDatabase::createTables()
     try 
     {
         pqxx::work txn(*conn_);
+
         // 1) документы
         txn.exec(R"(
             CREATE TABLE IF NOT EXISTS documents (
@@ -111,6 +117,7 @@ bool PostgresDatabase::createTables()
                 created_at TIMESTAMP DEFAULT NOW()
             )
         )");
+
         // 2) слова
         txn.exec(R"(
             CREATE TABLE IF NOT EXISTS words (
@@ -118,6 +125,7 @@ bool PostgresDatabase::createTables()
                 word TEXT NOT NULL UNIQUE
             )
         )");
+
         // 3) связь документы-слова с частотами
         txn.exec(R"(
             CREATE TABLE IF NOT EXISTS document_words (
@@ -127,13 +135,11 @@ bool PostgresDatabase::createTables()
                 PRIMARY KEY (document_id, word_id)
             )
         )");
+
         // индексы для быстрого поиска по документам и словам
-        txn.exec(R"(
-            CREATE INDEX IF NOT EXISTS idx_dw_doc ON document_words(document_id)
-        )");
-        txn.exec(R"(
-            CREATE INDEX IF NOT EXISTS idx_dw_word ON document_words(word_id)
-        )");
+        txn.exec(R"(CREATE INDEX IF NOT EXISTS idx_dw_doc ON document_words(document_id))");
+        txn.exec(R"(CREATE INDEX IF NOT EXISTS idx_dw_word ON document_words(word_id))");
+
         txn.commit();
 
         return true;

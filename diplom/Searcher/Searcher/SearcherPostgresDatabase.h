@@ -28,6 +28,6 @@ public:
     bool isConnected() const override;
     std::string query(const std::string& sql) override;
 
-    // Новый API: выполнить произвольный SQL и вернуть результат
+    // Выполнить произвольный SQL и вернуть результат
     pqxx::result execQuery(const std::string& sql);
 };

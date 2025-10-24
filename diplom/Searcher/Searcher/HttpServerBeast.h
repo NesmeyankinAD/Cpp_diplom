@@ -7,7 +7,8 @@
 class HtmlRenderer;
 class SearcherEngine;
 
-class HttpServerBeast {
+class HttpServerBeast 
+{
 public:
     HttpServerBeast(boost::asio::io_context& ioc,
         unsigned short port,

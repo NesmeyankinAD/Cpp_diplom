@@ -1,5 +1,3 @@
-// HttpClient.cpp
-
 #include "HttpClient.h"
 #include "HttpLogger.h"
 
@@ -23,51 +21,59 @@ namespace net = boost::asio;
 namespace ssl = boost::asio::ssl;
 using tcp = net::ip::tcp;
 
-// Простейшая функция разбора URL: протокол, хост, путь/цель, порт
-static void parseUrl(const std::string& url,
-    std::string& scheme,
-    std::string& host,
-    std::string& target,
-    std::string& portStr)
+// Функция разбора URL: протокол, хост, путь/цель, порт
+static void parseUrl(   const std::string& url,
+                        std::string& scheme,
+                        std::string& host,
+                        std::string& target,
+                        std::string& portStr)
 {
-    // Простейший разбор: протокол://host:порт/path
+    // Разбор: протокол://host:порт/path
     std::string s = url;
     scheme = "http";
     portStr.clear();
     host.clear();
     target = "/";
 
-    if (s.rfind("https://", 0) == 0) {
+    if (s.rfind("https://", 0) == 0) 
+    {
         scheme = "https";
         s = s.substr(8);
     }
-    else if (s.rfind("http://", 0) == 0) {
+    else if (s.rfind("http://", 0) == 0) 
+    {
         s = s.substr(7);
     }
-    else {
+    else 
+    {
         scheme = "http";
     }
 
     size_t slash = s.find('/');
-    if (slash != std::string::npos) {
+    if (slash != std::string::npos) 
+    {
         host = s.substr(0, slash);
         target = s.substr(slash);
     }
-    else {
+    else 
+    {
         host = s;
         target = "/";
     }
 
     size_t colon = host.find(':');
-    if (colon != std::string::npos) {
+    if (colon != std::string::npos) 
+    {
         portStr = host.substr(colon + 1);
         host = host.substr(0, colon);
     }
-    else {
+    else 
+    {
         portStr = (scheme == "https") ? "443" : "80";
     }
 }
 
+// Для https
 // Вспомогательная функция: попытка загрузить CACert из локального файла.
 // Файл cacert.pem должен находиться в папке проекта (или в рабочей директории при запуске).
 static void configureCACertsIfAvailable(ssl::context& ctx)
@@ -77,28 +83,33 @@ static void configureCACertsIfAvailable(ssl::context& ctx)
     // 2) Включаем верификацию сервера
     ctx.set_verify_mode(ssl::verify_peer);
 
-    // 3) Попытка загрузить локальный CACert, если он есть рядом с проектом
+    // 3) Попытка загрузить локальный CACert
     const std::string caPath = "cacert.pem"; // путь к файлу CACert в корне проекта
 
     std::ifstream fin(caPath);
-    if (fin.good()) {
-        try {
+    if (fin.good()) 
+    {
+        try 
+        {
             ctx.load_verify_file(caPath);
             HttpLogger::log("HttpClient[HTTPS]", "Loaded CA bundle from " + caPath);
         }
-        catch (const std::exception& e) {
+        catch (const std::exception& e) 
+        {
             HttpLogger::log("HttpClient[HTTPS]", std::string("Failed to load CA bundle from ") +
-                caPath + ": " + e.what());
+                            caPath + ": " + e.what());
         }
     }
-    else {
+    else 
+    {
         HttpLogger::log("HttpClient[HTTPS]", "CA bundle not found at " + caPath +
-            "; using system/default paths");
+                        "; using system/default paths");
     }
 }
 
 // Основная функция запроса
-bool HttpClient::fetch(const std::string& url, std::string& content) {
+bool HttpClient::fetch(const std::string& url, std::string& content) 
+{
     content.clear();
 
     HttpLogger::log("HttpClient", "Fetching URL: " + url);
@@ -108,17 +119,21 @@ bool HttpClient::fetch(const std::string& url, std::string& content) {
     parseUrl(url, scheme, host, target, portStr);
 
     unsigned short port = 0;
-    try {
+    try 
+    {
         port = static_cast<unsigned short>(std::stoi(portStr));
     }
-    catch (...) {
+    catch (...) 
+    {
         port = (scheme == "https") ? 443 : 80;
     }
 
-    try {
+    try 
+    {
         net::io_context ioc;
 
-        if (scheme == "https") {
+        if (scheme == "https") 
+        {
             HttpLogger::log("HttpClient[HTTPS]", "Starting TLS connection to " + host + ":" + std::to_string(port));
 
             ssl::context ctx(ssl::context::tlsv12_client);
@@ -131,10 +146,8 @@ bool HttpClient::fetch(const std::string& url, std::string& content) {
             auto const results = resolver.resolve(host, std::to_string(port));
 
             beast::get_lowest_layer(stream).connect(results);
-            // SNI
-            if (!SSL_set_tlsext_host_name(stream.native_handle(), host.c_str())) {
-                // ignore
-            }
+            
+            if (!SSL_set_tlsext_host_name(stream.native_handle(), host.c_str())) {}
 
             // TLS handshake
             stream.handshake(ssl::stream_base::client);
@@ -158,11 +171,12 @@ bool HttpClient::fetch(const std::string& url, std::string& content) {
             stream.shutdown(ec);
 
             HttpLogger::log("HttpClient[HTTPS]", "Response: status=" + std::to_string(res.result_int()) +
-                ", body_size=" + std::to_string(content.size()));
+                            ", body_size=" + std::to_string(content.size()));
 
             return res.result() == http::status::ok;
         }
-        else {
+        else 
+        {
             HttpLogger::log("HttpClient[HTTP]", "Starting HTTP connection to " + host + ":" + std::to_string(port));
 
             tcp::resolver resolver(ioc);
@@ -187,16 +201,18 @@ bool HttpClient::fetch(const std::string& url, std::string& content) {
             stream.socket().shutdown(tcp::socket::shutdown_both, ec);
 
             HttpLogger::log("HttpClient[HTTP]", "Response: status=" + std::to_string(res.result_int()) +
-                ", body_size=" + std::to_string(content.size()));
+                            ", body_size=" + std::to_string(content.size()));
 
             return res.result() == http::status::ok;
         }
     }
-    catch (const std::exception& e) {
+    catch (const std::exception& e) 
+    {
         HttpLogger::log("HttpClient", std::string("Exception in fetch: ") + e.what());
         return false;
     }
-    catch (...) {
+    catch (...) 
+    {
         HttpLogger::log("HttpClient", "Unknown exception in fetch");
         return false;
     }

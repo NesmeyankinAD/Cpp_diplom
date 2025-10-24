@@ -7,10 +7,10 @@
 
 SearcherConfigManager::SearcherConfigManager(const std::string& filename)
 {
+    // Чтение ini-файла.
     using boost::property_tree::ptree;
 
     ptree pt;
-    // Чтение ini-файла.
     boost::property_tree::ini_parser::read_ini(filename, pt);
 
     data_.dbHost = pt.get<std::string>("database.host", "localhost");
@@ -32,7 +32,6 @@ int SearcherConfigManager::getServerPort() const { return data_.serverPort; }
 
 void SearcherConfigManager::validate() const
 {
-    // Простейшая валидация значений
     if (data_.serverPort <= 0 || data_.serverPort > 65535)
     {
         throw std::runtime_error("Invalid server port in searcher configuration");

@@ -4,7 +4,8 @@
 #include <vector>
 #include <string>
 
-class SearcherEngine {
+class SearcherEngine 
+{
 public:
     explicit SearcherEngine(SearcherPostgresDatabase* db) : db_(db) {}
     std::vector<SearchResult> search(const std::string& query, size_t limit = 10);

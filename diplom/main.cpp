@@ -1,6 +1,11 @@
 #include "ConfigManager.h"
 #include "DatabaseFactory.h"
+#include <iostream>
+#include "IDatabase.h"
+#include <memory>
+#include "Spider.h"
 
+// Проверка работы
 int main_1() 
 {
     ConfigManager cm("config.ini");
@@ -18,18 +23,10 @@ int main_1()
     db->disconnect();
     return 0;
 }
-
-
-#include <iostream>
-#include "ConfigManager.h"
-#include "DatabaseFactory.h"
-#include "IDatabase.h"
-
 int main_2() 
 {
     try 
     {
-        // Путь к ini-файлу с настройками
         const std::string iniPath = "config.ini";
 
         // Создание конфигурации и экземпляра БД через фабрику
@@ -53,7 +50,6 @@ int main_2()
         std::string resp = db->query("SELECT 'OK' AS status;");
         std::cout << "DB response:\n" << resp << std::endl;
 
-        // По завершении можно вызвать другие операции (индексация и т.д.)
         db->disconnect();
     }
     catch (const std::exception& ex) 
@@ -64,38 +60,34 @@ int main_2()
 
     return 0;
 }
+// Проверка работы
 
 
-
-#include <iostream>
-#include <memory>
-#include "ConfigManager.h"
-#include "DatabaseFactory.h"
-#include "IDatabase.h"
-#include "Spider.h"
 
 int main() 
 {
     try {
         const std::string iniPath = "config.ini";
 
-        // Конфигурация и база
+        // Конфигурация
         ConfigManager cm(iniPath);
         std::unique_ptr<IDatabase> db = DatabaseFactory::create(cm);
 
-        if (!db) {
+        if (!db) 
+        {
             std::cerr << "Failed to create database instance." << std::endl;
             return 1;
         }
 
-        if (!db->connect("")) {
+        if (!db->connect("")) 
+        {
             std::cerr << "Database connection failed." << std::endl;
             return 1;
         }
 
         // Создаем паука и запускаем crawl
         Spider spider(cm, db.get());
-        spider.start(); // однопоточный старт
+        spider.start(); 
 
         db->disconnect();
     }

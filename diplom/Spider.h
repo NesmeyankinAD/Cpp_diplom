@@ -26,7 +26,7 @@ public:
     void start();
 
 private:
-    static constexpr int kNumWorkers = 4;
+    static constexpr int kNumWorkers = 4; // Количество потоков паука
 
     ConfigManager cm_;
     IDatabase* db_;
@@ -36,7 +36,8 @@ private:
     int crawlDelayMs_;
 
     // Очередь задач
-    struct Task {
+    struct Task 
+    {
         std::string url;
         int depth;
     };
@@ -63,7 +64,7 @@ private:
     // Очистка БД перед запуском текущего прогона
     void resetDatabaseForCurrentRun();
 
-    // Стратегия парсинга и индексирования
+    // Парсинг и индексирование
     bool fetchPage(const std::string& url, std::string& content, std::vector<std::string>& links);
     std::string stripHtml(const std::string& html);
     std::unordered_map<std::string, int> indexWords(const std::string& text);

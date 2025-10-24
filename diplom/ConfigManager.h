@@ -17,7 +17,7 @@ private:
         std::string startPage;
         int recursionDepth;
         int serverPort;
-        int crawlDelayMs; // новая задержка между запросами (мс)
+        int crawlDelayMs; //задержка между запросами (мс)
     } data_;
 
 public:
@@ -32,9 +32,8 @@ public:
     std::string getStartPage() const;
     int getRecursionDepth() const;
     int getServerPort() const;
-    int getCrawlDelayMs() const; // новая
+    int getCrawlDelayMs() const; 
 private:
-    // Валидация конфигурации
     void validate() const;
 };
 

@@ -4,10 +4,11 @@
 #include <ostream>
 
 // Результат поиска
-struct SearchResult {
+struct SearchResult 
+{
     std::string url;
-    double       score;
-    int          document_id;
+    double      score;
+    int         document_id;
 };
 
 // Оператор вывода для удобного печатания результатов

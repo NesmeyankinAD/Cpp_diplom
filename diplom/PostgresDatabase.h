@@ -19,16 +19,15 @@ private:
 
 public:
     PostgresDatabase(const std::string& host,
-        int port,
-        const std::string& dbname,
-        const std::string& user,
-        const std::string& password);
+                     int port,
+                     const std::string& dbname,
+                     const std::string& user,
+                     const std::string& password);
 
     bool connect(const std::string& connectionString) override;
     void disconnect() override;
     bool isConnected() const override;
     std::string query(const std::string& sql) override;
 
-    
     bool createTables();
 };
