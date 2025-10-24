@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 #include <string>
 #include <memory>
 #include "IDatabase.h"
@@ -28,6 +28,6 @@ public:
     bool isConnected() const override;
     std::string query(const std::string& sql) override;
 
-    // Выполнить произвольный SQL и вернуть результат
+    // Р’С‹РїРѕР»РЅРёС‚СЊ РїСЂРѕРёР·РІРѕР»СЊРЅС‹Р№ SQL Рё РІРµСЂРЅСѓС‚СЊ СЂРµР·СѓР»СЊС‚Р°С‚
     pqxx::result execQuery(const std::string& sql);
 };

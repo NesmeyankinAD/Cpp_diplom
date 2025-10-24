@@ -1,4 +1,4 @@
-#include "SearcherPostgresDatabase.h"
+п»ї#include "SearcherPostgresDatabase.h"
 #include <sstream>
 #include <iostream>
 #include <pqxx/pqxx>
@@ -70,7 +70,7 @@ std::string SearcherPostgresDatabase::query(const std::string& sql)
 
         txn.commit();
 
-        // Если результатов нет, вернуть пустую строку
+        // Р•СЃР»Рё СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ РЅРµС‚, РІРµСЂРЅСѓС‚СЊ РїСѓСЃС‚СѓСЋ СЃС‚СЂРѕРєСѓ
         if (res.empty()) return "";
 
         std::ostringstream out;

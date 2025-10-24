@@ -1,4 +1,4 @@
-#include "SearcherConfigManager.h"
+п»ї#include "SearcherConfigManager.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
@@ -7,7 +7,7 @@
 
 SearcherConfigManager::SearcherConfigManager(const std::string& filename)
 {
-    // Чтение ini-файла.
+    // Р§С‚РµРЅРёРµ ini-С„Р°Р№Р»Р°.
     using boost::property_tree::ptree;
 
     ptree pt;

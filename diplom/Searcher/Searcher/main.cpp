@@ -1,4 +1,4 @@
-#include <iostream>
+п»ї#include <iostream>
 
 #include "SearcherConfigManager.h"
 #include "SearcherPostgresDatabase.h"
@@ -9,20 +9,20 @@
 
 #include <boost/asio.hpp>
 
-// Проверка работы
+// РџСЂРѕРІРµСЂРєР° СЂР°Р±РѕС‚С‹
 int main_1() 
 {
-    // Чтение конфигурации
+    // Р§С‚РµРЅРёРµ РєРѕРЅС„РёРіСѓСЂР°С†РёРё
     SearcherConfigManager config("searcher.ini");
 
-    // Формирование строки подключения
+    // Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ СЃС‚СЂРѕРєРё РїРѕРґРєР»СЋС‡РµРЅРёСЏ
     std::string conn =  std::string("host=") + config.getDBHost() +
                         " port=" + std::to_string(config.getDBPort()) +
                         " dbname=" + config.getDBName() +
                         " user=" + config.getDBUser() +
                         " password=" + config.getDBPassword();
 
-    // Подключение к БД (инициализацию схемы отключаем для MVP)
+    // РџРѕРґРєР»СЋС‡РµРЅРёРµ Рє Р‘Р” (РёРЅРёС†РёР°Р»РёР·Р°С†РёСЋ СЃС…РµРјС‹ РѕС‚РєР»СЋС‡Р°РµРј РґР»СЏ MVP)
     SearcherPostgresDatabase db(config.getDBHost(),
                                 config.getDBPort(),
                                 config.getDBName(),
@@ -40,17 +40,17 @@ int main_1()
 }
 
 int main_2() {
-    // 1) читаем конфигурацию
+    // 1) С‡РёС‚Р°РµРј РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ
     SearcherConfigManager cfg("searcher.ini");
 
-    // 2) формируем строку подключения
+    // 2) С„РѕСЂРјРёСЂСѓРµРј СЃС‚СЂРѕРєСѓ РїРѕРґРєР»СЋС‡РµРЅРёСЏ
     std::string conn = "host=" + cfg.getDBHost() +
                        " port=" + std::to_string(cfg.getDBPort()) +
                        " dbname=" + cfg.getDBName() +
                        " user=" + cfg.getDBUser() +
                        " password=" + cfg.getDBPassword();
 
-    // 3) БД 
+    // 3) Р‘Р” 
     SearcherPostgresDatabase db(cfg.getDBHost(),
                                 cfg.getDBPort(),
                                 cfg.getDBName(),
@@ -63,11 +63,11 @@ int main_2() {
         return 1;
     }
 
-    // 4) движок поиска и тестовый запрос
+    // 4) РґРІРёР¶РѕРє РїРѕРёСЃРєР° Рё С‚РµСЃС‚РѕРІС‹Р№ Р·Р°РїСЂРѕСЃ
     SearcherEngine engine(&db);
     auto results = engine.search("for", 10);
 
-    // 5) вывод результатов в консоль
+    // 5) РІС‹РІРѕРґ СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ РІ РєРѕРЅСЃРѕР»СЊ
     for (const auto& r : results) 
     {
         std::cout << r.url << " -> " << r.score << std::endl;
@@ -75,22 +75,22 @@ int main_2() {
 
     return 0;
 }
-// Проверка работы
+// РџСЂРѕРІРµСЂРєР° СЂР°Р±РѕС‚С‹
 
 
 int main() 
 {
-    // 1) читаем конфигурацию
+    // 1) С‡РёС‚Р°РµРј РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ
     SearcherConfigManager cfg("searcher.ini");
 
-    // 2) формируем строку подключения к БД
+    // 2) С„РѕСЂРјРёСЂСѓРµРј СЃС‚СЂРѕРєСѓ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє Р‘Р”
     std::string conn =  "host=" + cfg.getDBHost() +
                         " port=" + std::to_string(cfg.getDBPort()) +
                         " dbname=" + cfg.getDBName() +
                         " user=" + cfg.getDBUser() +
                         " password=" + cfg.getDBPassword();
 
-    // 3) БД
+    // 3) Р‘Р”
     SearcherPostgresDatabase db(cfg.getDBHost(),
                                 cfg.getDBPort(),
                                 cfg.getDBName(),
@@ -106,13 +106,13 @@ int main()
     HtmlRenderer htmlRenderer;
     SearcherEngine engine(&db);
 
-    // 4) HTTP сервер на Boost.Beast
+    // 4) HTTP СЃРµСЂРІРµСЂ РЅР° Boost.Beast
     boost::asio::io_context ioc;
-    unsigned short httpPort = static_cast<unsigned short>(cfg.getServerPort()); // например 8080
+    unsigned short httpPort = static_cast<unsigned short>(cfg.getServerPort()); // РЅР°РїСЂРёРјРµСЂ 8080
 
     HttpServerBeast server(ioc, httpPort, &engine, &htmlRenderer);
 
-    // 5) запуск сервера 
+    // 5) Р·Р°РїСѓСЃРє СЃРµСЂРІРµСЂР° 
     server.run();
 
     return 0;

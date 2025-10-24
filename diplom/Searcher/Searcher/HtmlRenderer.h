@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include <string>
 #include <vector>
@@ -7,9 +7,9 @@
 class HtmlRenderer 
 {
 public:
-    // Рендерит страницу результатов
+    // Р РµРЅРґРµСЂРёС‚ СЃС‚СЂР°РЅРёС†Сѓ СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ
     std::string render(const std::vector<SearchResult>& results, const std::string& query);
 
-    // Рендерит простую индекс-страницу с формой поиска
+    // Р РµРЅРґРµСЂРёС‚ РїСЂРѕСЃС‚СѓСЋ РёРЅРґРµРєСЃ-СЃС‚СЂР°РЅРёС†Сѓ СЃ С„РѕСЂРјРѕР№ РїРѕРёСЃРєР°
     std::string renderIndex();
 };

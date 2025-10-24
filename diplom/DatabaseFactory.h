@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <memory>
 #include "IDatabase.h"
 #include "ConfigManager.h"

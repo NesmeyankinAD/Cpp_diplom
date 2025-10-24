@@ -1,8 +1,8 @@
-#include "HtmlRenderer.h"
+п»ї#include "HtmlRenderer.h"
 #include <sstream>
 
 
-// Функция экранирования HTML-символов
+// Р¤СѓРЅРєС†РёСЏ СЌРєСЂР°РЅРёСЂРѕРІР°РЅРёСЏ HTML-СЃРёРјРІРѕР»РѕРІ
 std::string escapeHtml(const std::string& s) 
 {
     std::string out;
@@ -22,7 +22,7 @@ std::string escapeHtml(const std::string& s)
     return out;
 }
 
-// Шаблон заголовков и базовая стилизация
+// РЁР°Р±Р»РѕРЅ Р·Р°РіРѕР»РѕРІРєРѕРІ Рё Р±Р°Р·РѕРІР°СЏ СЃС‚РёР»РёР·Р°С†РёСЏ
 const char* baseCss = R"(
     <style>
         body { font-family: Arial, sans-serif; margin: 2rem; }

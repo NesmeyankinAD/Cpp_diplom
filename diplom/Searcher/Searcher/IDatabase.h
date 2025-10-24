@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 #include <string>
 
 class IDatabase
@@ -6,15 +6,15 @@ class IDatabase
 public:
 	virtual ~IDatabase() = default;
 
-	// Установить соединение по строке подключения
+	// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ СЃРѕРµРґРёРЅРµРЅРёРµ РїРѕ СЃС‚СЂРѕРєРµ РїРѕРґРєР»СЋС‡РµРЅРёСЏ
 	virtual bool connect(const std::string& connectionString) = 0;
 
-	// Отключиться
+	// РћС‚РєР»СЋС‡РёС‚СЊСЃСЏ
 	virtual void disconnect() = 0;
 
-	// Статус подключения
+	// РЎС‚Р°С‚СѓСЃ РїРѕРґРєР»СЋС‡РµРЅРёСЏ
 	virtual bool isConnected() const = 0;
 
-	// Выполнить SQL-запрос и вернуть результат как строку
+	// Р’С‹РїРѕР»РЅРёС‚СЊ SQL-Р·Р°РїСЂРѕСЃ Рё РІРµСЂРЅСѓС‚СЊ СЂРµР·СѓР»СЊС‚Р°С‚ РєР°Рє СЃС‚СЂРѕРєСѓ
 	virtual std::string query(const std::string& sql) = 0;
 };

@@ -1,4 +1,4 @@
-#include "SearchResult.h"
+﻿#include "SearchResult.h"
 
 #include <ostream>
 

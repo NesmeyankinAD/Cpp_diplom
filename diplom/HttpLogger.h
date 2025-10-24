@@ -1,9 +1,9 @@
-#pragma once
+п»ї#pragma once
 #include <string>
 
 class HttpLogger 
 {
 public:
-    // Логгирование с таймштампом и тегом
+    // Р›РѕРіРіРёСЂРѕРІР°РЅРёРµ СЃ С‚Р°Р№РјС€С‚Р°РјРїРѕРј Рё С‚РµРіРѕРј
     static void log(const std::string& tag, const std::string& message);
 };

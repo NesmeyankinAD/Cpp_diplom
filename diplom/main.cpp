@@ -1,11 +1,11 @@
-#include "ConfigManager.h"
+п»ї#include "ConfigManager.h"
 #include "DatabaseFactory.h"
 #include <iostream>
 #include "IDatabase.h"
 #include <memory>
 #include "Spider.h"
 
-// Проверка работы
+// РџСЂРѕРІРµСЂРєР° СЂР°Р±РѕС‚С‹
 int main_1() 
 {
     ConfigManager cm("config.ini");
@@ -29,7 +29,7 @@ int main_2()
     {
         const std::string iniPath = "config.ini";
 
-        // Создание конфигурации и экземпляра БД через фабрику
+        // РЎРѕР·РґР°РЅРёРµ РєРѕРЅС„РёРіСѓСЂР°С†РёРё Рё СЌРєР·РµРјРїР»СЏСЂР° Р‘Р” С‡РµСЂРµР· С„Р°Р±СЂРёРєСѓ
         ConfigManager cm(iniPath);
         std::unique_ptr<IDatabase> db = DatabaseFactory::create(cm);
 
@@ -39,14 +39,14 @@ int main_2()
             return 1;
         }
 
-        // Подключение (пустая строка означает использование полей ConfigManager)
+        // РџРѕРґРєР»СЋС‡РµРЅРёРµ (РїСѓСЃС‚Р°СЏ СЃС‚СЂРѕРєР° РѕР·РЅР°С‡Р°РµС‚ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ РїРѕР»РµР№ ConfigManager)
         if (!db->connect("")) 
         {
             std::cerr << "Database connection failed." << std::endl;
             return 1;
         }
 
-        // Пример простого запроса: проверить работу БД
+        // РџСЂРёРјРµСЂ РїСЂРѕСЃС‚РѕРіРѕ Р·Р°РїСЂРѕСЃР°: РїСЂРѕРІРµСЂРёС‚СЊ СЂР°Р±РѕС‚Сѓ Р‘Р”
         std::string resp = db->query("SELECT 'OK' AS status;");
         std::cout << "DB response:\n" << resp << std::endl;
 
@@ -60,7 +60,7 @@ int main_2()
 
     return 0;
 }
-// Проверка работы
+// РџСЂРѕРІРµСЂРєР° СЂР°Р±РѕС‚С‹
 
 
 
@@ -69,7 +69,7 @@ int main()
     try {
         const std::string iniPath = "config.ini";
 
-        // Конфигурация
+        // РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ
         ConfigManager cm(iniPath);
         std::unique_ptr<IDatabase> db = DatabaseFactory::create(cm);
 
@@ -85,7 +85,7 @@ int main()
             return 1;
         }
 
-        // Создаем паука и запускаем crawl
+        // РЎРѕР·РґР°РµРј РїР°СѓРєР° Рё Р·Р°РїСѓСЃРєР°РµРј crawl
         Spider spider(cm, db.get());
         spider.start(); 
 

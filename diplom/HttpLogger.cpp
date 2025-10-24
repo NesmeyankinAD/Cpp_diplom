@@ -1,4 +1,4 @@
-#include "HttpLogger.h"
+﻿#include "HttpLogger.h"
 
 #include <mutex>
 #include <chrono>

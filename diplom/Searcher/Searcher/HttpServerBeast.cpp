@@ -1,4 +1,4 @@
-#include "HttpServerBeast.h"
+п»ї#include "HttpServerBeast.h"
 #include "HtmlRenderer.h"
 #include "SearcherEngine.h"
 
@@ -54,7 +54,7 @@ std::string parseForm(const std::string& body, const std::string& key = "q")
 
 std::string extractQueryParam(const std::string& target, const std::string& key = "q") 
 {
-    // target может быть "/search?q=..." или "/?q=..."
+    // target РјРѕР¶РµС‚ Р±С‹С‚СЊ "/search?q=..." РёР»Рё "/?q=..."
 
     auto qpos = target.find('?');
 

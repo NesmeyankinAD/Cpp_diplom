@@ -1,4 +1,4 @@
-#ifndef SEARCHER_CONFIG_MANAGER_H
+п»ї#ifndef SEARCHER_CONFIG_MANAGER_H
 #define SEARCHER_CONFIG_MANAGER_H
 
 #include <string>
@@ -6,7 +6,7 @@
 class SearcherConfigManager
 {
 private:
-    // Внутреннее хранение настроек
+    // Р’РЅСѓС‚СЂРµРЅРЅРµРµ С…СЂР°РЅРµРЅРёРµ РЅР°СЃС‚СЂРѕРµРє
     struct Data
     {
         std::string dbHost;
@@ -20,7 +20,7 @@ private:
 public:
     explicit SearcherConfigManager(const std::string& filename);
 
-    // Геттеры
+    // Р“РµС‚С‚РµСЂС‹
     std::string getDBHost() const;
     int getDBPort() const;
     std::string getDBName() const;
@@ -29,7 +29,7 @@ public:
     int getServerPort() const;
 
 private:
-    // Валидация конфигурации
+    // Р’Р°Р»РёРґР°С†РёСЏ РєРѕРЅС„РёРіСѓСЂР°С†РёРё
     void validate() const;
 };
 

@@ -1,9 +1,9 @@
-#pragma once
+п»ї#pragma once
 
 #include <string>
 #include <ostream>
 
-// Результат поиска
+// Р РµР·СѓР»СЊС‚Р°С‚ РїРѕРёСЃРєР°
 struct SearchResult 
 {
     std::string url;
@@ -11,5 +11,5 @@ struct SearchResult
     int         document_id;
 };
 
-// Оператор вывода для удобного печатания результатов
+// РћРїРµСЂР°С‚РѕСЂ РІС‹РІРѕРґР° РґР»СЏ СѓРґРѕР±РЅРѕРіРѕ РїРµС‡Р°С‚Р°РЅРёСЏ СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ
 std::ostream& operator<<(std::ostream& os, const SearchResult& sr);

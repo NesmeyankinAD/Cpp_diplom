@@ -1,9 +1,9 @@
-#pragma once
+п»ї#pragma once
 #include <string>
 
 class HttpClient 
 {
 public:
-    // Возвращает true, если удалось загрузить страницу, content заполняется
+    // Р’РѕР·РІСЂР°С‰Р°РµС‚ true, РµСЃР»Рё СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃС‚СЂР°РЅРёС†Сѓ, content Р·Р°РїРѕР»РЅСЏРµС‚СЃСЏ
     static bool fetch(const std::string& url, std::string& content);
 };

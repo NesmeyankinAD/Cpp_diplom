@@ -1,4 +1,4 @@
-#include "PostgresDatabase.h"
+п»ї#include "PostgresDatabase.h"
 #include <sstream>
 #include <iostream>
 #include <pqxx/pqxx>
@@ -42,7 +42,7 @@ bool PostgresDatabase::connect(const std::string& connectionString)
 
         if (connected_ && !schemaInitialized_) 
         {
-            // инициализируем схему БД при первом подключении
+            // РёРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј СЃС…РµРјСѓ Р‘Р” РїСЂРё РїРµСЂРІРѕРј РїРѕРґРєР»СЋС‡РµРЅРёРё
             schemaInitialized_ = createTables();
         }
     }
@@ -76,7 +76,7 @@ std::string PostgresDatabase::query(const std::string& sql)
 
         txn.commit();
 
-        // Если результатов нет, вернуть пустую строку
+        // Р•СЃР»Рё СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ РЅРµС‚, РІРµСЂРЅСѓС‚СЊ РїСѓСЃС‚СѓСЋ СЃС‚СЂРѕРєСѓ
         if (res.empty()) return "";
 
         std::ostringstream out;
@@ -109,7 +109,7 @@ bool PostgresDatabase::createTables()
     {
         pqxx::work txn(*conn_);
 
-        // 1) документы
+        // 1) РґРѕРєСѓРјРµРЅС‚С‹
         txn.exec(R"(
             CREATE TABLE IF NOT EXISTS documents (
                 id SERIAL PRIMARY KEY,
@@ -118,7 +118,7 @@ bool PostgresDatabase::createTables()
             )
         )");
 
-        // 2) слова
+        // 2) СЃР»РѕРІР°
         txn.exec(R"(
             CREATE TABLE IF NOT EXISTS words (
                 id SERIAL PRIMARY KEY,
@@ -126,7 +126,7 @@ bool PostgresDatabase::createTables()
             )
         )");
 
-        // 3) связь документы-слова с частотами
+        // 3) СЃРІСЏР·СЊ РґРѕРєСѓРјРµРЅС‚С‹-СЃР»РѕРІР° СЃ С‡Р°СЃС‚РѕС‚Р°РјРё
         txn.exec(R"(
             CREATE TABLE IF NOT EXISTS document_words (
                 document_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
@@ -136,7 +136,7 @@ bool PostgresDatabase::createTables()
             )
         )");
 
-        // индексы для быстрого поиска по документам и словам
+        // РёРЅРґРµРєСЃС‹ РґР»СЏ Р±С‹СЃС‚СЂРѕРіРѕ РїРѕРёСЃРєР° РїРѕ РґРѕРєСѓРјРµРЅС‚Р°Рј Рё СЃР»РѕРІР°Рј
         txn.exec(R"(CREATE INDEX IF NOT EXISTS idx_dw_doc ON document_words(document_id))");
         txn.exec(R"(CREATE INDEX IF NOT EXISTS idx_dw_word ON document_words(word_id))");
 

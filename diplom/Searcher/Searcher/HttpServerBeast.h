@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include <boost/beast/http.hpp>
 #include <boost/asio.hpp>
@@ -15,7 +15,7 @@ public:
         SearcherEngine* engine,
         HtmlRenderer* renderer);
 
-    // Блокирующий запуск сервера (при вызове слушает и обрабатывает соединения)
+    // Р‘Р»РѕРєРёСЂСѓСЋС‰РёР№ Р·Р°РїСѓСЃРє СЃРµСЂРІРµСЂР° (РїСЂРё РІС‹Р·РѕРІРµ СЃР»СѓС€Р°РµС‚ Рё РѕР±СЂР°Р±Р°С‚С‹РІР°РµС‚ СЃРѕРµРґРёРЅРµРЅРёСЏ)
     void run();
 
 private:

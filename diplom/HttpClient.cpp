@@ -1,4 +1,4 @@
-#include "HttpClient.h"
+п»ї#include "HttpClient.h"
 #include "HttpLogger.h"
 
 #include <string>
@@ -21,14 +21,14 @@ namespace net = boost::asio;
 namespace ssl = boost::asio::ssl;
 using tcp = net::ip::tcp;
 
-// Функция разбора URL: протокол, хост, путь/цель, порт
+// Р¤СѓРЅРєС†РёСЏ СЂР°Р·Р±РѕСЂР° URL: РїСЂРѕС‚РѕРєРѕР», С…РѕСЃС‚, РїСѓС‚СЊ/С†РµР»СЊ, РїРѕСЂС‚
 static void parseUrl(   const std::string& url,
                         std::string& scheme,
                         std::string& host,
                         std::string& target,
                         std::string& portStr)
 {
-    // Разбор: протокол://host:порт/path
+    // Р Р°Р·Р±РѕСЂ: РїСЂРѕС‚РѕРєРѕР»://host:РїРѕСЂС‚/path
     std::string s = url;
     scheme = "http";
     portStr.clear();
@@ -73,18 +73,18 @@ static void parseUrl(   const std::string& url,
     }
 }
 
-// Для https
-// Вспомогательная функция: попытка загрузить CACert из локального файла.
-// Файл cacert.pem должен находиться в папке проекта (или в рабочей директории при запуске).
+// Р”Р»СЏ https
+// Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅР°СЏ С„СѓРЅРєС†РёСЏ: РїРѕРїС‹С‚РєР° Р·Р°РіСЂСѓР·РёС‚СЊ CACert РёР· Р»РѕРєР°Р»СЊРЅРѕРіРѕ С„Р°Р№Р»Р°.
+// Р¤Р°Р№Р» cacert.pem РґРѕР»Р¶РµРЅ РЅР°С…РѕРґРёС‚СЊСЃСЏ РІ РїР°РїРєРµ РїСЂРѕРµРєС‚Р° (РёР»Рё РІ СЂР°Р±РѕС‡РµР№ РґРёСЂРµРєС‚РѕСЂРёРё РїСЂРё Р·Р°РїСѓСЃРєРµ).
 static void configureCACertsIfAvailable(ssl::context& ctx)
 {
-    // 1) Пробуем использовать системные CA-пути по умолчанию
+    // 1) РџСЂРѕР±СѓРµРј РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЃРёСЃС‚РµРјРЅС‹Рµ CA-РїСѓС‚Рё РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
     ctx.set_default_verify_paths();
-    // 2) Включаем верификацию сервера
+    // 2) Р’РєР»СЋС‡Р°РµРј РІРµСЂРёС„РёРєР°С†РёСЋ СЃРµСЂРІРµСЂР°
     ctx.set_verify_mode(ssl::verify_peer);
 
-    // 3) Попытка загрузить локальный CACert
-    const std::string caPath = "cacert.pem"; // путь к файлу CACert в корне проекта
+    // 3) РџРѕРїС‹С‚РєР° Р·Р°РіСЂСѓР·РёС‚СЊ Р»РѕРєР°Р»СЊРЅС‹Р№ CACert
+    const std::string caPath = "cacert.pem"; // РїСѓС‚СЊ Рє С„Р°Р№Р»Сѓ CACert РІ РєРѕСЂРЅРµ РїСЂРѕРµРєС‚Р°
 
     std::ifstream fin(caPath);
     if (fin.good()) 
@@ -107,14 +107,14 @@ static void configureCACertsIfAvailable(ssl::context& ctx)
     }
 }
 
-// Основная функция запроса
+// РћСЃРЅРѕРІРЅР°СЏ С„СѓРЅРєС†РёСЏ Р·Р°РїСЂРѕСЃР°
 bool HttpClient::fetch(const std::string& url, std::string& content) 
 {
     content.clear();
 
     HttpLogger::log("HttpClient", "Fetching URL: " + url);
 
-    // Разбор URL
+    // Р Р°Р·Р±РѕСЂ URL
     std::string scheme, host, target, portStr;
     parseUrl(url, scheme, host, target, portStr);
 
@@ -137,7 +137,7 @@ bool HttpClient::fetch(const std::string& url, std::string& content)
             HttpLogger::log("HttpClient[HTTPS]", "Starting TLS connection to " + host + ":" + std::to_string(port));
 
             ssl::context ctx(ssl::context::tlsv12_client);
-            // Настроим CA: системные пути + локальный CACert (если есть)
+            // РќР°СЃС‚СЂРѕРёРј CA: СЃРёСЃС‚РµРјРЅС‹Рµ РїСѓС‚Рё + Р»РѕРєР°Р»СЊРЅС‹Р№ CACert (РµСЃР»Рё РµСЃС‚СЊ)
             configureCACertsIfAvailable(ctx);
 
             beast::ssl_stream<beast::tcp_stream> stream(ioc, ctx);

@@ -1,4 +1,4 @@
-#include "SearcherEngine.h"
+﻿#include "SearcherEngine.h"
 #include <algorithm>
 #include <cctype>
 #include <sstream>

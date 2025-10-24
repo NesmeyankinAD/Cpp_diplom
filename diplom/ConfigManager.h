@@ -1,4 +1,4 @@
-#ifndef CONFIG_MANAGER_H
+п»ї#ifndef CONFIG_MANAGER_H
 #define CONFIG_MANAGER_H
 
 #include <string>
@@ -6,7 +6,7 @@
 class ConfigManager
 {
 private:
-    // Внутреннее хранение настроек
+    // Р’РЅСѓС‚СЂРµРЅРЅРµРµ С…СЂР°РЅРµРЅРёРµ РЅР°СЃС‚СЂРѕРµРє
     struct Data
     {
         std::string dbHost;
@@ -17,13 +17,13 @@ private:
         std::string startPage;
         int recursionDepth;
         int serverPort;
-        int crawlDelayMs; //задержка между запросами (мс)
+        int crawlDelayMs; //Р·Р°РґРµСЂР¶РєР° РјРµР¶РґСѓ Р·Р°РїСЂРѕСЃР°РјРё (РјСЃ)
     } data_;
 
 public:
     explicit ConfigManager(const std::string& filename);
 
-    // Геттеры
+    // Р“РµС‚С‚РµСЂС‹
     std::string getDBHost() const;
     int getDBPort() const;
     std::string getDBName() const;

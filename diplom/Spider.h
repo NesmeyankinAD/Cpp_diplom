@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include <string>
 #include <vector>
@@ -19,14 +19,14 @@
 class Spider
 {
 public:
-    // cm - конфигурация, db - интерфейс доступа к БД
+    // cm - РєРѕРЅС„РёРіСѓСЂР°С†РёСЏ, db - РёРЅС‚РµСЂС„РµР№СЃ РґРѕСЃС‚СѓРїР° Рє Р‘Р”
     Spider(const ConfigManager& cm, IDatabase* db);
 
-    // Запуск паука
+    // Р—Р°РїСѓСЃРє РїР°СѓРєР°
     void start();
 
 private:
-    static constexpr int kNumWorkers = 4; // Количество потоков паука
+    static constexpr int kNumWorkers = 4; // РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕС‚РѕРєРѕРІ РїР°СѓРєР°
 
     ConfigManager cm_;
     IDatabase* db_;
@@ -35,7 +35,7 @@ private:
     int maxDepth_;
     int crawlDelayMs_;
 
-    // Очередь задач
+    // РћС‡РµСЂРµРґСЊ Р·Р°РґР°С‡
     struct Task 
     {
         std::string url;
@@ -46,30 +46,30 @@ private:
     std::mutex frontier_mutex_;
     std::condition_variable frontier_cv_;
 
-    // Рабочие потоки
+    // Р Р°Р±РѕС‡РёРµ РїРѕС‚РѕРєРё
     std::array<std::thread, kNumWorkers> workers_;
     std::atomic<bool> stop_{ false };
-    std::atomic<int> activeTasks_{ 0 }; // активные задачи в данный момент
+    std::atomic<int> activeTasks_{ 0 }; // Р°РєС‚РёРІРЅС‹Рµ Р·Р°РґР°С‡Рё РІ РґР°РЅРЅС‹Р№ РјРѕРјРµРЅС‚
 
-    // Защита от повторного посещения
+    // Р—Р°С‰РёС‚Р° РѕС‚ РїРѕРІС‚РѕСЂРЅРѕРіРѕ РїРѕСЃРµС‰РµРЅРёСЏ
     std::unordered_set<std::string> visited_;
     std::mutex visited_mutex_;
 
-    // БД
+    // Р‘Р”
     std::mutex dbMutex_;
 
-    // Вспомогательные методы
+    // Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ РјРµС‚РѕРґС‹
     void workerLoop();
 
-    // Очистка БД перед запуском текущего прогона
+    // РћС‡РёСЃС‚РєР° Р‘Р” РїРµСЂРµРґ Р·Р°РїСѓСЃРєРѕРј С‚РµРєСѓС‰РµРіРѕ РїСЂРѕРіРѕРЅР°
     void resetDatabaseForCurrentRun();
 
-    // Парсинг и индексирование
+    // РџР°СЂСЃРёРЅРі Рё РёРЅРґРµРєСЃРёСЂРѕРІР°РЅРёРµ
     bool fetchPage(const std::string& url, std::string& content, std::vector<std::string>& links);
     std::string stripHtml(const std::string& html);
     std::unordered_map<std::string, int> indexWords(const std::string& text);
 
-    // Работа с документами/словами
+    // Р Р°Р±РѕС‚Р° СЃ РґРѕРєСѓРјРµРЅС‚Р°РјРё/СЃР»РѕРІР°РјРё
     int upsertDocumentId(const std::string& url);
     int upsertWordId(const std::string& word);
     int upsertWordIdNoLock(const std::string& word);
@@ -78,7 +78,7 @@ private:
     int upsertDocumentIdNoLock(const std::string& url);
     void storeDocumentWordsNoLock(int docId, const std::unordered_map<std::string, int>& freqs);
 
-    // Вспомогательное
+    // Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅРѕРµ
     std::string sqlEscape(const std::string& s);
     std::string extractDomain(const std::string& url) const;
     bool isSameDomain(const std::string& url) const;

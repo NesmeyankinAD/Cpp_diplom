@@ -1,4 +1,4 @@
-#include "ConfigManager.h"
+п»ї#include "ConfigManager.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
@@ -7,7 +7,7 @@
 
 ConfigManager::ConfigManager(const std::string& filename)
 {
-    // Чтение ini-файла.
+    // Р§С‚РµРЅРёРµ ini-С„Р°Р№Р»Р°.
     using boost::property_tree::ptree;
     ptree pt;
     
@@ -38,7 +38,7 @@ int ConfigManager::getCrawlDelayMs() const       { return data_.crawlDelayMs; }
 
 void ConfigManager::validate() const
 {
-    // Валидация значений
+    // Р’Р°Р»РёРґР°С†РёСЏ Р·РЅР°С‡РµРЅРёР№
     if (data_.serverPort <= 0 || data_.serverPort > 65535)
     {
         throw std::runtime_error("Invalid server port in configuration");

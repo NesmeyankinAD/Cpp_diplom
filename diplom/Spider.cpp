@@ -1,4 +1,4 @@
-#include "Spider.h"
+п»ї#include "Spider.h"
 
 #include <iostream>
 #include <sstream>
@@ -9,8 +9,8 @@
 #include <thread>
 #include <cctype>
 
-#include "HttpClient.h"   // Используем для загрузки страниц (HTTP/HTTPS)
-#include "HttpLogger.h"   // Логирование
+#include "HttpClient.h"   // РСЃРїРѕР»СЊР·СѓРµРј РґР»СЏ Р·Р°РіСЂСѓР·РєРё СЃС‚СЂР°РЅРёС† (HTTP/HTTPS)
+#include "HttpLogger.h"   // Р›РѕРіРёСЂРѕРІР°РЅРёРµ
 
 
 Spider::Spider(const ConfigManager& cm, IDatabase* db)
@@ -20,7 +20,7 @@ Spider::Spider(const ConfigManager& cm, IDatabase* db)
     maxDepth_(cm.getRecursionDepth()),
     crawlDelayMs_(cm.getCrawlDelayMs()){}
 
-// Запуск паука
+// Р—Р°РїСѓСЃРє РїР°СѓРєР°
 void Spider::start() 
 {
     if (!db_) 
@@ -29,7 +29,7 @@ void Spider::start()
         return;
     }
 
-    // Подключение к БД
+    // РџРѕРґРєР»СЋС‡РµРЅРёРµ Рє Р‘Р”
     if (!db_->isConnected()) 
     {
         if (!db_->connect("")) 
@@ -41,11 +41,11 @@ void Spider::start()
 
     HttpLogger::log("Spider", "DB connected.");
 
-    // Очистка БД перед прогоном
+    // РћС‡РёСЃС‚РєР° Р‘Р” РїРµСЂРµРґ РїСЂРѕРіРѕРЅРѕРј
     resetDatabaseForCurrentRun();
     HttpLogger::log("Spider", "Database reset for current run.");
 
-    // Начальная задача
+    // РќР°С‡Р°Р»СЊРЅР°СЏ Р·Р°РґР°С‡Р°
     {
         std::lock_guard<std::mutex> lock(frontier_mutex_);
         frontier_.push({ startPage_, 0 });
@@ -55,13 +55,13 @@ void Spider::start()
     stop_ = false;
     activeTasks_ = 0;
 
-    // Запуск рабочих потоков
+    // Р—Р°РїСѓСЃРє СЂР°Р±РѕС‡РёС… РїРѕС‚РѕРєРѕРІ
     for (size_t i = 0; i < kNumWorkers; ++i) 
     {
         workers_[i] = std::thread(&Spider::workerLoop, this);
     }
 
-    // Ожидание завершения прогона
+    // РћР¶РёРґР°РЅРёРµ Р·Р°РІРµСЂС€РµРЅРёСЏ РїСЂРѕРіРѕРЅР°
     while (true) 
     {
         {
@@ -71,7 +71,7 @@ void Spider::start()
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    // Остановка и ожидание потоков
+    // РћСЃС‚Р°РЅРѕРІРєР° Рё РѕР¶РёРґР°РЅРёРµ РїРѕС‚РѕРєРѕРІ
     stop_ = true;
     frontier_cv_.notify_all();
     for (auto& th : workers_) 
@@ -98,7 +98,7 @@ bool Spider::fetchPage(const std::string& url,
     HttpLogger::log("Spider", "Fetched page: " + url + 
                     " (size=" + std::to_string(content.size()) + ")");
 
-    // Парсинг ссылок
+    // РџР°СЂСЃРёРЅРі СЃСЃС‹Р»РѕРє
     std::regex aHref(R"(<a\s+(?:[^>]*?\s+)?href=\"([^\"]+)\")", std::regex_constants::icase);
 
     for (std::sregex_iterator it(content.begin(), content.end(), aHref);
@@ -139,7 +139,7 @@ std::string Spider::stripHtml(const std::string& html)
         if (!inTag) text += ch;
     }
 
-    // Нормализация
+    // РќРѕСЂРјР°Р»РёР·Р°С†РёСЏ
     for (char& c : text) 
     {
         if (c == '\n' || c == '\r' || c == '\t') c = ' ';
@@ -155,7 +155,7 @@ std::unordered_map<std::string, int> Spider::indexWords(const std::string& text)
 
     while (ss >> word) 
     {
-        // Очистка по краям и нормализация
+        // РћС‡РёСЃС‚РєР° РїРѕ РєСЂР°СЏРј Рё РЅРѕСЂРјР°Р»РёР·Р°С†РёСЏ
         size_t l = 0;
         size_t r = word.size();
 
@@ -217,7 +217,7 @@ int Spider::upsertWordIdNoLock(const std::string& word)
 
 void Spider::storeDocumentWords(int docId, const std::unordered_map<std::string, int>& freqs) 
 {
-    // Блокируем запись на протяжении всей обработки одного документа
+    // Р‘Р»РѕРєРёСЂСѓРµРј Р·Р°РїРёСЃСЊ РЅР° РїСЂРѕС‚СЏР¶РµРЅРёРё РІСЃРµР№ РѕР±СЂР°Р±РѕС‚РєРё РѕРґРЅРѕРіРѕ РґРѕРєСѓРјРµРЅС‚Р°
     std::lock_guard<std::mutex> lock(dbMutex_);
 
     for (const auto& kv : freqs) 
@@ -251,7 +251,7 @@ std::string Spider::sqlEscape(const std::string& s)
 
 void Spider::resetDatabaseForCurrentRun() 
 {
-    // Очистка текущих данных
+    // РћС‡РёСЃС‚РєР° С‚РµРєСѓС‰РёС… РґР°РЅРЅС‹С…
     std::string sql = "TRUNCATE TABLE document_words, documents, words RESTART IDENTITY CASCADE;";
     std::lock_guard<std::mutex> lock(dbMutex_);
     
@@ -352,7 +352,7 @@ void Spider::workerLoop()
                 docId = upsertDocumentIdNoLock(task.url);
                 if (docId > 0) 
                 {
-                    // Записываем словарь документов для данного документа
+                    // Р—Р°РїРёСЃС‹РІР°РµРј СЃР»РѕРІР°СЂСЊ РґРѕРєСѓРјРµРЅС‚РѕРІ РґР»СЏ РґР°РЅРЅРѕРіРѕ РґРѕРєСѓРјРµРЅС‚Р°
                     storeDocumentWordsNoLock(docId, freqs);
                 }
             }

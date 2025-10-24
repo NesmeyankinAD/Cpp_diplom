@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "SearcherPostgresDatabase.h"
 #include "SearchResult.h"
 #include <vector>
